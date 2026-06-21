@@ -1,11 +1,10 @@
 #include <SDL2/SDL.h>
-#include <iostream> // This fixes the red squiggly lines
+#include <iostream> 
 #include "cpu.h"
 #include "memory.h"
 #include "ppu.h"
 
 int main(int argc, char* argv[]) {
-    // 1. Initialize SDL at the very beginning
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL Init failed: " << SDL_GetError() << std::endl;
         return 1;
@@ -19,7 +18,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 2. Setup Emulator Components
     Memory memory;
     GameBoyCPU cpu(&memory);
     PPU ppu(renderer);

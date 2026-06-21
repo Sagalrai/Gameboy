@@ -1,5 +1,5 @@
 #include "memory.h"
-#include "ppu.h" // Add this include
+#include "ppu.h" 
 
 Memory::Memory() : ppu(nullptr) {
     for (int i = 0; i < 0x10000; i++) mem[i] = 0;
