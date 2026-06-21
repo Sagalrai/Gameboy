@@ -46,6 +46,7 @@ int GameBoyCPU::handlePrefixCB() {
             setFlags(res == 0, 0, 0, (c & 1));
             return 8;
         }
+        case 0x37: { a = (a >> 4) | (a << 4); setFlags(a == 0, 0, 0, 0); return 8; }
         case 0x7C: {
             uint8_t bit = (h >> 7) & 1;
             setFlags(bit == 0, 0, 1, (f & 0x10));
@@ -65,18 +66,22 @@ int GameBoyCPU::step() {
     switch (op) {
         case 0x00: cycles = 4; break;
         case 0x01: bc = (read(pc+1) << 8) | read(pc); pc += 2; cycles = 12; break;
+        case 0x02: write(bc, a); cycles = 8; break;
         case 0x05: b--; setFlags(b == 0, 1, 0, (f & 0x10)); cycles = 4; break;
         case 0x06: b = read(pc++); cycles = 8; break;
         case 0x08: {
             uint16_t addr = (read(pc+1) << 8) | read(pc); pc += 2;
             write(addr, sp & 0xFF); write(addr + 1, sp >> 8); cycles = 20; break;
         }
+        case 0x0A: a = read(bc); cycles = 8; break;
         case 0x0C: c++; setFlags(c == 0, 0, 0, (f & 0x10)); cycles = 4; break;
         case 0x0D: c--; setFlags(c == 1, 1, 0, (f & 0x10)); cycles = 4; break;
         case 0x0E: c = read(pc++); cycles = 8; break;
         case 0x11: de = (read(pc+1) << 8) | read(pc); pc += 2; cycles = 12; break;
+        case 0x12: write(de, a); cycles = 8; break;
         case 0x15: d--; setFlags(d == 0, 1, 0, (f & 0x10)); cycles = 4; break;
         case 0x16: d = read(pc++); cycles = 8; break;
+        case 0x18: { int8_t off = (int8_t)read(pc++); pc += off; cycles = 12; break; }
         case 0x1A: a = read(de); cycles = 8; break;
         case 0x1E: e = read(pc++); cycles = 8; break;
         case 0x20: {
@@ -88,9 +93,14 @@ int GameBoyCPU::step() {
             uint8_t lo = read(pc++); uint8_t hi = read(pc++);
             hl = (hi << 8) | lo; cycles = 12; break;
         }
+        case 0x22: write(hl++, a); cycles = 8; break;
         case 0x23: hl++; cycles = 8; break;
+        case 0x28: { int8_t off = (int8_t)read(pc++); if (f & 0x80) { pc += off; cycles = 12; } else { cycles = 8; } break; }
+        case 0x2A: a = read(hl++); cycles = 8; break;
         case 0x31: sp = (read(pc+1) << 8) | read(pc); pc += 2; cycles = 12; break;
         case 0x32: write(hl--, a); cycles = 8; break;
+        case 0x3A: a = read(hl--); cycles = 8; break;
+        case 0x3C: a++; setFlags(a == 0, 0, (a & 0x0F) == 0, (f & 0x10)); cycles = 4; break;
         case 0x3E: a = read(pc++); cycles = 8; break;
         case 0x76: cycles = 4; break;
         case 0x77: write(hl, a); cycles = 8; break;
@@ -110,9 +120,14 @@ int GameBoyCPU::step() {
             write(--sp, (pc >> 8) & 0xFF); write(--sp, pc & 0xFF);
             pc = (hi << 8) | lo; cycles = 24; break;
         }
+        case 0xE0: { uint8_t addr = read(pc++); write(0xFF00 + addr, a); cycles = 12; break; }
         case 0xE1: { l = read(sp++); h = read(sp++); cycles = 12; break; }
         case 0xE5: { write(--sp, h); write(--sp, l); cycles = 16; break; }
+        case 0xEA: { uint16_t addr = read(pc) | (read(pc+1) << 8); pc += 2; write(addr, a); cycles = 16; break; }
+        case 0xF0: { uint8_t addr = read(pc++); a = read(0xFF00 + addr); cycles = 12; break; }
         case 0xC3: pc = (read(pc+1) << 8) | read(pc); cycles = 16; break;
+        case 0xFA: { uint16_t addr = read(pc) | (read(pc+1) << 8); pc += 2; a = read(addr); cycles = 16; break; }
+        case 0xFE: { uint8_t val = read(pc++); setFlags(a == val, 1, (a & 0x0F) < (val & 0x0F), a < val); cycles = 8; break; }
         case 0xF3: IME = false; cycles = 4; break;
         case 0xFB: IME = true;  cycles = 4; break;
         case 0xCB: cycles = handlePrefixCB(); break;
