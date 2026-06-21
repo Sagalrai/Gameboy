@@ -12,6 +12,8 @@ public:
     GameBoyCPU(Memory* mem);
     int step();
     void debug();
+ 
+    void setFlags(uint8_t z, uint8_t n, uint8_t h, uint8_t c);
 private:
     Memory* memory;
     uint8_t read(uint16_t addr);

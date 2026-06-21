@@ -8,9 +8,7 @@ Memory::Memory() : ppu(nullptr) {
 uint8_t Memory::read(uint16_t addr) {
     return mem[addr];
 }
-
 void Memory::write(uint16_t addr, uint8_t val) {
-    if (addr < 0x8000) return;
     
     if (addr >= 0x8000 && addr <= 0x9FFF) {
         if (ppu) ppu->writeVRAM(addr, val);
